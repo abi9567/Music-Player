@@ -22,7 +22,8 @@ object AudioModule {
     @Provides
     @Singleton
     fun provideAudioPlayer(
-        @ApplicationContext context: Context
-    ): AudioPlayerManager = AudioPlayerManager(context)
+        @ApplicationContext context: Context,
+        audioEffectsManager: AudioEffectsManager
+    ): AudioPlayerManager = AudioPlayerManager(context, audioEffectsManager)
 
 }

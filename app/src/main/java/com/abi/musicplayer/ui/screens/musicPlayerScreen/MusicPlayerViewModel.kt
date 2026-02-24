@@ -1,11 +1,12 @@
 package com.abi.musicplayer.ui.screens.musicPlayerScreen
 
-import androidx.compose.material3.FabPosition
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.abi.musicplayer.data.model.AudioEffects
 import com.abi.musicplayer.data.model.AudioFile
 import com.abi.musicplayer.data.repository.AudioRepository
+import com.abi.musicplayer.di.AudioEffectsManager
 import com.abi.musicplayer.di.AudioPlayerManager
 import com.abi.musicplayer.navigation.Screens.Companion.FILE_ID_ARGS
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,7 +18,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -26,6 +26,7 @@ import javax.inject.Inject
 class MusicPlayerViewModel @Inject constructor(
     private val audioRepository: AudioRepository,
     private val audioPlayerManager: AudioPlayerManager,
+    private val audioEffectsManager: AudioEffectsManager,
     state: SavedStateHandle
 ) : ViewModel() {
 
@@ -56,6 +57,12 @@ class MusicPlayerViewModel @Inject constructor(
         list.getOrNull(index = currentIndex + 1)
     }
 
+    private val _audioEffect = MutableStateFlow<AudioEffects?>(value = null)
+    val audioEffect: StateFlow<AudioEffects?> = _audioEffect.asStateFlow()
+
+    private val _selectedPreset = MutableStateFlow<String?>(value = null)
+    val selectedPreset : StateFlow<String?> = _selectedPreset.asStateFlow()
+
     private var slidingJob: Job? = null
 
     init {
@@ -63,6 +70,7 @@ class MusicPlayerViewModel @Inject constructor(
             val music = audioRepository.fetchMusic(id = musicId)
             _currentAudio.emit(value = music)
             startPlaying(resId = music?.id)
+            setupEqualizer()
         }
     }
 
@@ -73,8 +81,8 @@ class MusicPlayerViewModel @Inject constructor(
         }
     }
 
-    fun seekPosition() {
-        audioPlayerManager.seekTo(position = _sliderPosition.value)
+    fun seekPosition(reset: Boolean = false) {
+        audioPlayerManager.seekTo(position = if (reset) 0F else _sliderPosition.value)
         updateSliderPosition()
     }
 
@@ -121,4 +129,52 @@ class MusicPlayerViewModel @Inject constructor(
         audioPlayerManager.stop()
     }
 
+    fun setupEqualizer() {
+        val bands = audioEffectsManager.getBandCount()
+        val range = audioEffectsManager.getBandLevelRange()
+        val bandLevels = List(bands.toInt()) { audioEffectsManager.getBandLevel(it.toShort()) }
+        val presets = audioEffectsManager.getAvailablePresets()
+
+        viewModelScope.launch {
+            _audioEffect.emit(
+                AudioEffects(
+                    minLevel = range[0].toInt(),
+                    maxLevel = range[1].toInt(),
+                    bandLevels = bandLevels,
+                    presets = presets
+                )
+            )
+        }
+    }
+
+    fun setBandLevel(band: Int, level: Float) {
+        viewModelScope.launch {
+            audioEffectsManager.setBandLevel(band.toShort(), level.toInt().toShort())
+            val updatedBandLevel = _audioEffect.value?.copy(
+                bandLevels = _audioEffect.value?.bandLevels?.toMutableList()?.apply {
+                    this[band] = level.toInt().toShort()
+                } ?: emptyList()
+            )
+            _audioEffect.emit(updatedBandLevel)
+        }
+    }
+
+    fun setPreset(preset : Int, name : String) {
+        viewModelScope.launch {
+            audioEffectsManager.usePreset(preset = preset)
+            _selectedPreset.emit(value = name)
+        }
+    }
+
+    fun resetPreset() {
+        viewModelScope.launch {
+            audioEffectsManager.usePreset(preset = 0)
+            _selectedPreset.emit(value = null)
+        }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        audioPlayerManager.stop()
+    }
 }
