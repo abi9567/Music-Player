@@ -3,8 +3,12 @@ package com.abi.musicplayer.ui.common
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -21,7 +25,8 @@ import com.abi.musicplayer.R
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MusicTopBar(
-    @StringRes title: Int
+    @StringRes title: Int,
+    onNavigationButtonClick: (() -> Unit)? = null
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         TopAppBar(
@@ -34,7 +39,14 @@ fun MusicTopBar(
                 )
             }, colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = colorResource(id = R.color.app_bar_color)
-            )
+            ), navigationIcon = if (onNavigationButtonClick != null) {
+                { IconButton(onClick = onNavigationButtonClick) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = null,
+                        tint = colorResource(id = R.color.white))
+                } }
+            } else { {}}
         )
         HorizontalDivider(
             modifier = Modifier.fillMaxWidth(),

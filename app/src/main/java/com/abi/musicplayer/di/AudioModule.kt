@@ -19,4 +19,10 @@ object AudioModule {
         @ApplicationContext context: Context
     ) : AudioRepository = AudioRepository(context)
 
+    @Provides
+    @Singleton
+    fun provideAudioPlayer(
+        @ApplicationContext context: Context
+    ): AudioPlayerManager = AudioPlayerManager(context)
+
 }

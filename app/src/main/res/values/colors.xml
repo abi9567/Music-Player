@@ -11,4 +11,5 @@
     <color name="app_bar_color">#1F293D</color>
     <color name="background_color">#1F293D</color>
     <color name="divider_color">#2E395B</color>
+    <color name="track_color">#474E80</color>
 </resources>

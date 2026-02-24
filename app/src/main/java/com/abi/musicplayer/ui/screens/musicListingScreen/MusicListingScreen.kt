@@ -33,7 +33,7 @@ fun MusicListingScreen(
             contentPadding = PaddingValues(all = dimensionResource(id = R.dimen.margin_large)),
             verticalArrangement = Arrangement.spacedBy(space = dimensionResource(id = R.dimen.margin_normal))
         ) {
-            items(items = musicFiles ?: emptyList()) {music ->
+            items(items = musicFiles) {music ->
                 music ?: return@items
                 ListingSingleItem(
                     music = music,

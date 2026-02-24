@@ -14,11 +14,10 @@ import com.abi.musicplayer.ui.screens.musicPlayerScreen.MusicPlayerViewModel
 @Composable
 fun NavigationGraph(navController: NavHostController, paddingValues: PaddingValues) {
 
-    val listingViewModel = hiltViewModel<MusicListingViewModel>()
-
     NavHost(navController = navController, startDestination = Screens.MusicListingScreen.route) {
 
         composable(route = Screens.MusicListingScreen.route) {
+            val listingViewModel = hiltViewModel<MusicListingViewModel>()
             MusicListingScreen(
                 viewModel = listingViewModel,
                 navController = navController

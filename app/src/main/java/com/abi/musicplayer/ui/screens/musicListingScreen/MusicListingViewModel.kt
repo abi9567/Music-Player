@@ -6,8 +6,10 @@ import com.abi.musicplayer.data.model.AudioFile
 import com.abi.musicplayer.data.repository.AudioRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -16,12 +18,15 @@ class MusicListingViewModel @Inject constructor(
     audioRepository: AudioRepository
 ) : ViewModel() {
 
-    private val _musicFiles = MutableStateFlow<List<AudioFile?>?>(value = emptyList())
-    val musicFiles : StateFlow<List<AudioFile?>?> = _musicFiles.asStateFlow()
+    val musicFiles = audioRepository.audioFiles.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 1000),
+        initialValue = emptyList()
+    )
 
     init {
         viewModelScope.launch {
-            _musicFiles.emit(audioRepository.getAudioFileDetails())
+            audioRepository.getAudioFileDetails()
         }
     }
 
