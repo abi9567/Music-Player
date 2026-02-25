@@ -21,7 +21,7 @@ class AudioRepository @Inject constructor(@ApplicationContext private val contex
 
     suspend fun getAudioFileDetails() {
         if (_audioFiles.value.isNotEmpty()) return
-        val audioFilesRaw = listOf(R.raw.mazha_thullikal_vettam)
+        val audioFilesRaw = listOf(R.raw.mazha_thullikal_vettam, R.raw.vaathil_melle_thuranna, R.raw.dhurandhar, R.raw.vettam_new)
         val audioFiles = audioFilesRaw.mapIndexed { position, id ->
             try {
                 val metadataRetriever = MediaMetadataRetriever()

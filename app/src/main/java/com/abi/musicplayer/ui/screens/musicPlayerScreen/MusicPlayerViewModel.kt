@@ -65,8 +65,7 @@ class MusicPlayerViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             val music = audioRepository.fetchMusic(id = musicId)
-            _currentAudio.emit(value = music)
-            startPlaying(resId = music?.id)
+            startPlaying(music = music)
         }
     }
 
@@ -82,11 +81,12 @@ class MusicPlayerViewModel @Inject constructor(
         updateSliderPosition()
     }
 
-    fun startPlaying(resId: Int?) {
-        resId ?: return
+    fun startPlaying(music: AudioFile?) {
+        music ?: return
         viewModelScope.launch {
-            audioPlayerManager.play(resId = resId)
+            audioPlayerManager.play(resId = music.id)
             _isPlaying.emit(value = true)
+            _currentAudio.emit(value = music)
             updateSliderPosition()
         }
     }
@@ -101,14 +101,14 @@ class MusicPlayerViewModel @Inject constructor(
     fun playNextAudio() {
         viewModelScope.launch {
             val nextAudio = nextAudioFile.firstOrNull() ?: return@launch
-            audioPlayerManager.play(resId = nextAudio.id)
+            startPlaying(music = nextAudio)
         }
     }
 
     fun playPreviousAudio() {
         viewModelScope.launch {
-            val nextAudio = previousAudioFile.firstOrNull() ?: return@launch
-            audioPlayerManager.play(resId = nextAudio.id)
+            val previousAudio = previousAudioFile.firstOrNull() ?: return@launch
+            startPlaying(music = previousAudio)
         }
     }
 

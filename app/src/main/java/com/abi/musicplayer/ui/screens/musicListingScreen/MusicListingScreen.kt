@@ -31,7 +31,7 @@ fun MusicListingScreen(
         LazyColumn(
             modifier = Modifier.padding(paddingValues = paddingValues),
             contentPadding = PaddingValues(all = dimensionResource(id = R.dimen.margin_large)),
-            verticalArrangement = Arrangement.spacedBy(space = dimensionResource(id = R.dimen.margin_normal))
+            verticalArrangement = Arrangement.spacedBy(space = dimensionResource(id = R.dimen.margin_large))
         ) {
             items(items = musicFiles) {music ->
                 music ?: return@items

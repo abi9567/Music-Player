@@ -125,7 +125,8 @@ fun MusicPlayerScreen(
                         .clip(shape = RoundedCornerShape(size = dimensionResource(id = R.dimen.margin_normal)))
                         .height(height = 100.dp)
                         .align(alignment = Alignment.BottomCenter)
-                        .fillMaxWidth()
+                        .fillMaxWidth(),
+                    isPlaying = isPlaying
                 )
             }
             Spacer(
