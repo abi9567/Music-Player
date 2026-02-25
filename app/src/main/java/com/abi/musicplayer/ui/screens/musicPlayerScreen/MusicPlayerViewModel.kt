@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import com.abi.musicplayer.data.model.AudioEffects
 import com.abi.musicplayer.data.model.AudioFile
 import com.abi.musicplayer.data.repository.AudioRepository
-import com.abi.musicplayer.di.AudioEffectsManager
 import com.abi.musicplayer.di.AudioPlayerManager
 import com.abi.musicplayer.navigation.Screens.Companion.FILE_ID_ARGS
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,7 +25,6 @@ import javax.inject.Inject
 class MusicPlayerViewModel @Inject constructor(
     private val audioRepository: AudioRepository,
     private val audioPlayerManager: AudioPlayerManager,
-    private val audioEffectsManager: AudioEffectsManager,
     state: SavedStateHandle
 ) : ViewModel() {
 
@@ -54,11 +52,10 @@ class MusicPlayerViewModel @Inject constructor(
 
     val previousAudioFile = musicFiles.combine(_currentAudio) { list, currentAudio ->
         val currentIndex = list.indexOf(currentAudio).takeIf { it != -1 } ?: return@combine null
-        list.getOrNull(index = currentIndex + 1)
+        list.getOrNull(index = currentIndex - 1)
     }
 
-    private val _audioEffect = MutableStateFlow<AudioEffects?>(value = null)
-    val audioEffect: StateFlow<AudioEffects?> = _audioEffect.asStateFlow()
+    val audioEqualizerState: StateFlow<AudioEffects?> = audioPlayerManager.equalizerState
 
     private val _selectedPreset = MutableStateFlow<String?>(value = null)
     val selectedPreset : StateFlow<String?> = _selectedPreset.asStateFlow()
@@ -70,7 +67,6 @@ class MusicPlayerViewModel @Inject constructor(
             val music = audioRepository.fetchMusic(id = musicId)
             _currentAudio.emit(value = music)
             startPlaying(resId = music?.id)
-            setupEqualizer()
         }
     }
 
@@ -117,6 +113,7 @@ class MusicPlayerViewModel @Inject constructor(
     }
 
     fun updateSliderPosition() {
+        slidingJob?.cancel()
         slidingJob = viewModelScope.launch {
             while(true) {
                 _sliderPosition.emit(value = audioPlayerManager.getCurrentPosition)
@@ -129,46 +126,20 @@ class MusicPlayerViewModel @Inject constructor(
         audioPlayerManager.stop()
     }
 
-    fun setupEqualizer() {
-        val bands = audioEffectsManager.getBandCount()
-        val range = audioEffectsManager.getBandLevelRange()
-        val bandLevels = List(bands.toInt()) { audioEffectsManager.getBandLevel(it.toShort()) }
-        val presets = audioEffectsManager.getAvailablePresets()
-
-        viewModelScope.launch {
-            _audioEffect.emit(
-                AudioEffects(
-                    minLevel = range[0].toInt(),
-                    maxLevel = range[1].toInt(),
-                    bandLevels = bandLevels,
-                    presets = presets
-                )
-            )
-        }
-    }
-
     fun setBandLevel(band: Int, level: Float) {
-        viewModelScope.launch {
-            audioEffectsManager.setBandLevel(band.toShort(), level.toInt().toShort())
-            val updatedBandLevel = _audioEffect.value?.copy(
-                bandLevels = _audioEffect.value?.bandLevels?.toMutableList()?.apply {
-                    this[band] = level.toInt().toShort()
-                } ?: emptyList()
-            )
-            _audioEffect.emit(updatedBandLevel)
-        }
+        audioPlayerManager.setBandLevel(band, level.toInt())
     }
 
     fun setPreset(preset : Int, name : String) {
         viewModelScope.launch {
-            audioEffectsManager.usePreset(preset = preset)
+            audioPlayerManager.setPreset(preset = preset)
             _selectedPreset.emit(value = name)
         }
     }
 
     fun resetPreset() {
         viewModelScope.launch {
-            audioEffectsManager.usePreset(preset = 0)
+            audioPlayerManager.setPreset(preset = 0)
             _selectedPreset.emit(value = null)
         }
     }

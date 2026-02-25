@@ -118,13 +118,14 @@ fun MusicPlayerScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .aspectRatio(ratio = 1F)
-                        .clip(RoundedCornerShape(size = dimensionResource(id = R.dimen.margin_normal))),
+                        .clip(shape = RoundedCornerShape(size = dimensionResource(id = R.dimen.margin_normal))),
                 )
                 AudioGraphView(
                     modifier = Modifier
+                        .clip(shape = RoundedCornerShape(size = dimensionResource(id = R.dimen.margin_normal)))
+                        .height(height = 100.dp)
                         .align(alignment = Alignment.BottomCenter)
                         .fillMaxWidth()
-                        .height(height = 100.dp)
                 )
             }
             Spacer(

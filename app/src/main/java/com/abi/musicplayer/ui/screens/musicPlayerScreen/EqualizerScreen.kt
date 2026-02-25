@@ -43,7 +43,7 @@ fun EqualizerScreen(
 ) {
     val context = LocalContext.current
     val state = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val audioEffect by viewModel.audioEffect.collectAsStateWithLifecycle()
+    val audioEqualizerState by viewModel.audioEqualizerState.collectAsStateWithLifecycle()
     val selectedPreset by viewModel.selectedPreset.collectAsStateWithLifecycle()
     var isDropdownExpanded by remember { mutableStateOf(value = false) }
 
@@ -56,7 +56,7 @@ fun EqualizerScreen(
             expanded = isDropdownExpanded,
             onDismissRequest = { isDropdownExpanded = false }
         ) {
-            audioEffect?.presets?.forEachIndexed { index, name ->
+            audioEqualizerState?.presets?.forEachIndexed { index, name ->
                 DropdownMenuItem(
                     text = {
                         Text(name)
@@ -96,13 +96,13 @@ fun EqualizerScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Default.MoreVert,
-                        tint = colorResource(id = R.color.background_color),
+                        tint = colorResource(id = R.color.white),
                         contentDescription = null
                     )
                 }
             }
 
-            audioEffect?.bandLevels?.forEachIndexed { index, level ->
+            audioEqualizerState?.bandLevels?.forEachIndexed { index, level ->
                 Row(
                     modifier = Modifier
                         .padding(top = dimensionResource(id = R.dimen.margin_large))
@@ -119,7 +119,7 @@ fun EqualizerScreen(
                         onValueChange = {
                             viewModel.setBandLevel(index, it)
                         },
-                        valueRange = (audioEffect?.minLevel ?: 0).toFloat()..(audioEffect?.maxLevel ?: 0).toFloat(),
+                        valueRange = (audioEqualizerState?.minLevel ?: 0).toFloat()..(audioEqualizerState?.maxLevel ?: 0).toFloat(),
                         modifier = Modifier
                             .clickable {
                                 if (selectedPreset != null) {

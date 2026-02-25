@@ -1,50 +1,53 @@
 package com.abi.musicplayer.di
 
 import android.media.audiofx.Equalizer
+import com.abi.musicplayer.data.model.AudioEffects
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class AudioEffectsManager @Inject constructor() {
 
-    private var equalizer: Equalizer? = null
+    private var audioEqualizer: Equalizer? = null
 
     fun setupEqualizer(audioSessionId: Int) {
         release()
-        equalizer = Equalizer(0, audioSessionId).apply {
+        audioEqualizer = Equalizer(0, audioSessionId).apply {
             enabled = true
         }
     }
 
-    fun getBandCount(): Short {
-        return equalizer?.numberOfBands ?: 0
-    }
-
-    fun getBandLevelRange(): ShortArray {
-        return equalizer?.bandLevelRange ?: shortArrayOf(0, 0)
-    }
-
-    fun getBandLevel(band: Short): Short {
-        return equalizer?.getBandLevel(band) ?: 0
-    }
-
-    fun setBandLevel(band: Short, level: Short) {
-        equalizer?.setBandLevel(band, level)
-    }
-
-    fun getAvailablePresets(): List<String> {
-        val count = equalizer?.numberOfPresets?.toInt()?: 0
-        return List(count) { i ->
-            equalizer?.getPresetName(i.toShort()) ?: ""
-        }
+    fun setBandLevel(band: Int, level: Int) {
+        audioEqualizer?.setBandLevel(band.toShort(), level.toShort())
     }
 
     fun usePreset(preset: Int) {
-        equalizer?.usePreset(preset.toShort())
+        audioEqualizer?.usePreset(preset.toShort())
     }
 
     fun release() {
-        equalizer?.release()
-        equalizer = null
+        audioEqualizer?.release()
+        audioEqualizer = null
+    }
+
+    fun setupAudioEffect(): AudioEffects? {
+        val equalizer = audioEqualizer ?: return null
+        val numberOfBands = equalizer.numberOfBands
+        val bandLevelRange = equalizer.bandLevelRange
+
+        val bandLevels = List(numberOfBands.toInt()) {
+            equalizer.getBandLevel(it.toShort())
+        }
+
+        val presets = (0 until equalizer.numberOfPresets).map {
+            equalizer.getPresetName(it.toShort())
+        }
+
+        return AudioEffects(
+            minLevel = bandLevelRange[0].toInt(),
+            maxLevel = bandLevelRange[1].toInt(),
+            bandLevels = bandLevels,
+            presets = presets
+        )
     }
 }
